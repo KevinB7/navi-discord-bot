@@ -85,13 +85,21 @@ class Server:
 
   @_role.command(name='create', pass_context=True)
   @perms.has_perms(manage_roles=True)
-  async def _create(self, ctx, role_name : str):
+  async def _create(self, ctx, role_name : str, time : float = 0):
     """
     creates and adds a new role to list of public roles
+	if time is specified will delete and remove role in that number of days
     """
     serv = ctx.message.server
     role = await self.bot.create_role(serv, name=role_name, mentionable=True)
     await self._add_wrap(ctx, role)
+	
+	if time <= 0:
+		return
+	try:
+	  await self.event(role, time)
+	except:
+	  await self.bot.say("Their was an error creating this event. I'll figure it out later.")
 
   @_role.command(name='list', aliases=['ls'], pass_context=True)
   @perms.has_perms(manage_roles=True)
@@ -472,7 +480,11 @@ class Server:
               member.mention
             )
       )
-
+  async def event(self, ctx, role, time):
+    time *= 86400
+	await asyncio.sleep(time)
+	await self._delete(role)
+	
 def setup(bot):
   g = Server(bot)
   bot.add_cog(g)
